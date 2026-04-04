@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calorie & BMR Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NL25M2MSZ3"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-NL25M2MSZ3');
+  </script>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: #1f2937; 
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #f9fafb;
+    }
+
+    h1 {
+      font-weight: 700;
+      margin: 20px 0 10px;
+      text-align: center;
+      color: #f9fafb;
+    }
+
+    h2 {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #f9fafb;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .box {
+      background: #111827; 
+      padding: 25px 20px;
+      margin: 10px;
+      border-radius: 12px;
+      width: 300px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      flex: 1 1 300px;
+    }
+
+    input, select, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      font-size: 1rem;
+      background: #1f2937;
+      color: #f9fafb;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.4);
+    }
+
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    button.green {
+      background: #22c55e;
+    }
+
+    button.green:hover {
+      background: #16a34a;
+    }
+
+    button.red {
+      background: #ef4444;
+    }
+
+    button.red:hover {
+      background: #dc2626;
+    }
+
+    #result p, #log p {
+      background: #111827;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin: 5px 0;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+    }
+
+    .food-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .progress-bar {
+      background: #374151;
+      border-radius: 5px;
+      height: 12px;
+      width: 100%;
+      margin: 5px 0 10px 0;
+      overflow: hidden;
+    }
+
+    .progress {
+      height: 100%;
+      border-radius: 5px;
+      width: 0%;
+      transition: width 1s ease-in-out; /* animation */
+    }
+
+    .protein { background: #22c55e; }
+    .carbs { background: #3b82f6; }
+    .fats { background: #f97316; }
+
+    #total {
+      margin-top: 10px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Calorie & BMR Tracker</h1>
+
+  <div class="container">
+    <!-- Calculator Box -->
+    <div class="box">
+      <h2>Calculate</h2>
+
+      <input type="number" id="weight" placeholder="Weight (kg)">
+      <input type="number" id="height" placeholder="Height (cm)">
+      <input type="number" id="age" placeholder="Age">
+
+      <select id="gender">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
+      <select id="activity">
+        <option value="1.2">Sedentary</option>
+        <option value="1.375">Light</option>
+        <option value="1.55">Moderate</option>
+        <option value="1.725">Active</option>
+      </select>
+
+      <button onclick="calculate()">Calculate</button>
+
+      <div id="result"></div>
+    </div>
+
+    <!-- Food Log Box -->
+    <div class="box">
+      <h2>Food Log</h2>
+
+      <input type="text" id="food" placeholder="Food name">
+      <input type="number" id="foodCalories" placeholder="Calories">
+
+      <button class="green" onclick="addFood()">Add Food</button>
+
+      <div id="log"></div>
+      <h3 id="total"></h3>
+    </div>
+  </div>
+
+<script>
+let foodLog = JSON.parse(localStorage.getItem("foodLog")) || [];
+
+function calculate() {
+  let weight = parseFloat(document.getElementById("weight").value);
+  let height = parseFloat(document.getElementById("height").value);
+  let age = parseFloat(document.getElementById("age").value);
+  let gender = document.getElementById("gender").value;
+  let activity = parseFloat(document.getElementById("activity").value);
+
+  if (!weight || !height || !age) return;
+
+  let bmr = gender === "male"
+    ? 10 * weight + 6.25 * height - 5 * age + 5
+    : 10 * weight + 6.25 * height - 5 * age - 161;
+
+  let calories = bmr * activity;
+
+  let protein = (calories * 0.3) / 4;
+  let carbs = (calories * 0.4) / 4;
+  let fats = (calories * 0.3) / 9;
+
+  let totalMacro = protein + carbs + fats;
+
+  document.getElementById("result").innerHTML = `
+    <p>BMR: ${Math.round(bmr)}</p>
+    <p>Calories: ${Math.round(calories)}</p>
+
+    <div>Protein: ${Math.round(protein)}g</div>
+    <div class="progress-bar"><div id="proteinBar" class="progress protein"></div></div>
+
+    <div>Carbs: ${Math.round(carbs)}g</div>
+    <div class="progress-bar"><div id="carbsBar" class="progress carbs"></div></div>
+
+    <div>Fats: ${Math.round(fats)}g</div>
+    <div class="progress-bar"><div id="fatsBar" class="progress fats"></div></div>
+  `;
+
+  // Animate the progress bars
+  setTimeout(() => {
+    document.getElementById("proteinBar").style.width = (protein / totalMacro * 100).toFixed(0) + '%';
+    document.getElementById("carbsBar").style.width = (carbs / totalMacro * 100).toFixed(0) + '%';
+    document.getElementById("fatsBar").style.width = (fats / totalMacro * 100).toFixed(0) + '%';
+  }, 50); // slight delay for animation effect
+}
+
+function addFood() {
+  let food = document.getElementById("food").value.trim();
+  let calories = parseInt(document.getElementById("foodCalories").value);
+
+  if (!food || !calories) return;
+
+  foodLog.push({ food, calories });
+  localStorage.setItem("foodLog", JSON.stringify(foodLog));
+
+  document.getElementById("food").value = "";
+  document.getElementById("foodCalories").value = "";
+
+  renderLog();
+}
+
+function deleteFood(index) {
+  foodLog.splice(index, 1);
+  localStorage.setItem("foodLog", JSON.stringify(foodLog));
+  renderLog();
+}
+
+function renderLog() {
+  let logDiv = document.getElementById("log");
+  logDiv.innerHTML = "";
+
+  let total = 0;
+
+  foodLog.forEach((item, index) => {
+    total += item.calories;
+    logDiv.innerHTML += `
+      <div class="food-item">
+        <span>${item.food} - ${item.calories} kcal</span>
+        <button class="red" onclick="deleteFood(${index})">Delete</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText = "Total: " + total + " kcal";
+}
+
+renderLog();
+</script>
+
+</body>
+</html>
